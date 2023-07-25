@@ -2,11 +2,6 @@ const cheerio = require("cheerio");
 const fetch = require("node-fetch");
 const { Readability } = require("@mozilla/readability");
 const { JSDOM } = require("jsdom");
-const { parseHTML } = require("linkedom");
-const express = require("express");
-const app = express();
-const port = 3000;
-const cors = require("cors");
 const MAX_TOKENS = 4096;
 
 const BASE_URL = "https://sg.search.yahoo.com/search";

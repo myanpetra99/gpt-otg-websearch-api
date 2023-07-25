@@ -10,13 +10,14 @@
     "linkedom": "^0.15.1",
     "morgan": "^1.10.0",
     "node-summarizer": "^1.0.7",
-    "puppeteer": "^20.9.0"
+    "puppeteer": "^20.9.0",
+    "node-fetch": "^2.6.1"
   },
   "description": "A simple API to get the summary of a web page",
   "version": "0.1.1",
   "main": "index.js",
   "engines": {
-    "node": "14.x"
+    "node": "18.x"
   },
   "scripts": {
     "start": "node index.js"
