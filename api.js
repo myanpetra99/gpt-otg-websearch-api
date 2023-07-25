@@ -51,12 +51,20 @@ async function getWebpageTitleAndText(url, html_str = "", numResults) {
     };
   }
 
-  const parsedContents = parsed.filter(
-    (item) => item.content.trim() !== "" && item.content !== null
-  );
+  let parsedContents;
+
+  if (parsed && parsed.content && parsed.content.trim() !== "") {
+      parsedContents = parsed.content.trim();
+  }
+  else {
+      parsedContents = "No content found.";
+  }
+  
 
   const text = cleanText(parsedContents.textContent);
   const trimmedText = trimContent(text, parsedContents.length);
+  console.log("trimmedText length", trimmedText.length);
+  console.log("parsedContents length", parsedContents.length);
 
   return { title: parsed.title, body: trimmedText, url };
 }
@@ -149,11 +157,18 @@ const extractContent = async (url) => {
 };
 
 const trimContent = (content, numResults) => {
-  const maxTokens = Math.floor(MAX_TOKENS / numResults);
-  return content.length > maxTokens
-    ? content.substring(0, maxTokens) + "..."
-    : content;
+  const maxTokens = Math.floor(MAX_TOKENS / numResults)-650;
+  const words = content.split(' ');
+
+  // If the content has more words than the max tokens, trim it
+  if (words.length > maxTokens) {
+    console.log("Trimming content from", words.length, "to", maxTokens, "tokens");
+    return words.slice(0, maxTokens).join(' ') + "...";
+  } else {
+    return content;
+  }
 };
+
 
 function htmlToSearchResults(html, numResults) {
   const $ = cheerio.load(html);
@@ -203,8 +218,9 @@ async function webSearch(search, numResults) {
     );
 
     parsedContents = parsedContents.filter(
-      (item) => item.content && item.content.trim() !== ""
+      (item) => item && item.content && item.content.trim() !== ""
     );
+    
 
     const initialPrompt = contentToPrompt(parsedContents, search);
 
@@ -232,10 +248,10 @@ const contentToPrompt = (parsedContents, search) => {
   let length = parsedContents.length;
   for (let i = 0; i < length; i++) {
     try {
-      searchResults += `NUMBER ${number}
-            URL : ${parsedContents[i].url}
-            TITLE : ${parsedContents[i].h1Title}
-            CONTENT : ${trimContent(parsedContents[i].content, length)}\n`;
+      searchResults += `\nNUMBER ${number}
+      \nURL : ${parsedContents[i].url}
+      \nTITLE : ${parsedContents[i].h1Title}
+      \nCONTENT : ${trimContent(parsedContents[i].content, length)}\n`;
       number++;
     } catch (error) {
       console.error(`Error at index ${i}: ${error}`);
@@ -243,7 +259,7 @@ const contentToPrompt = (parsedContents, search) => {
     }
   }
   const initialPrompt = `I will give you a question or an instruction. Your objective is to answer my question or fulfill my instruction.
-    My question or instruction is: ${search.query} For your reference, today's date is ${date}.
+    My question or instruction is: ${search.query} For your reference, today's date is ${date}.\n
     It's possible that the question or instruction, or just a portion of it, requires relevant information from the internet to give a satisfactory answer or complete the task. It's possible that the question or instruction, or just a portion of it, requires relevant information from the internet to give a satisfactory answer or complete the task. I'm providing you with the necessary information already obtained from the internet below. This sets the context for addressing the question or fulfilling the instruction, so you don't need to access the internet to answer my question or fulfill my instruction. Write a comprehensive reply to the given question or instruction using the information provided below in the best way you can. Ensure to cite results using [[NUMBER](URL)] notation after the reference. If the provided information from the internet refers to multiple subjects with the same name, write separate answers for each subject.
     A strict requirement for you is that if the below information I provide does not contain the information you need to address the question or fulfill the instruction, just respond 'The search results do not contain the necessary content. Please try again with different query and/or search options (e.g., number of search results, search engine, etc.).'
     Now, write a comprehensive reply to the given question or instruction with this information:
