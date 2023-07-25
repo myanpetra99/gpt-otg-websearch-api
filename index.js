@@ -1,10 +1,16 @@
 //create server
 
 const express = require('express');
-const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const cors = require('cors');
-const api = require('./api');
+const morgan = require('morgan');
+const helmet = require('helmet');
+
+const app = express();
+
+// Middleware
+app.use(morgan('combined'));
+app.use(helmet());
 app.use(cors());
 
 //create server
